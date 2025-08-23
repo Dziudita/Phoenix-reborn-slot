@@ -4,7 +4,6 @@ async function loadCSV(path) {
   const lines = txt.trim().split(/\r?\n/);
   const header = lines.shift().split(",");
   return lines.map(line => {
-    // simple CSV: split first 3 commas only
     const firstComma = line.indexOf(",");
     const secondComma = line.indexOf(",", firstComma + 1);
     const thirdComma = line.indexOf(",", secondComma + 1);
@@ -17,16 +16,24 @@ async function loadCSV(path) {
   });
 }
 
-const reelsEl = document.getElementById("reels");
+const reelsEl   = document.getElementById("reels");
 const balanceEl = document.getElementById("balance");
-const winEl = document.getElementById("win");
-const betEl = document.getElementById("bet");
-const spinBtn = document.getElementById("spin");
-const buyBtn = document.getElementById("bonusBuy");
-const betMinus = document.getElementById("betMinus");
-const betPlus = document.getElementById("betPlus");
+const winEl     = document.getElementById("win");
+const betEl     = document.getElementById("bet");
+const spinBtn   = document.getElementById("spin");
+const buyBtn    = document.getElementById("bonusBuy");
+const betMinus  = document.getElementById("betMinus");
+const betPlus   = document.getElementById("betPlus");
 
-let outcomes = [];
+// Modal refs
+const modal       = document.getElementById("bonusModal");
+const chooseLight = document.getElementById("chooseLight");
+const chooseDark  = document.getElementById("chooseDark");
+const closeModal  = document.getElementById("closeModal");
+
+let outcomes      = [];
+let outcomesLight = [];
+let outcomesDark  = [];
 let balance = 1000;
 let bet = 1.0;
 
@@ -39,8 +46,7 @@ function drawPlaceholders(){
     for (let r=0;r<3;r++){
       const cell = document.createElement("div");
       cell.className = "symbol";
-      // just placeholders (we’ll replace with events later)
-      const icons = ["A","K","Q","J","🜂","🜁","🜃","🜄"]; // alchemy vibe
+      const icons = ["A","K","Q","J","🜂","🜁","🜃","🜄"];
       cell.textContent = icons[(i*3+r)%icons.length];
       col.appendChild(cell);
     }
@@ -49,7 +55,6 @@ function drawPlaceholders(){
 drawPlaceholders();
 
 function animateStops(stops){
-  // very simple: show stop indexes as numbers (demo only)
   reelsEl.querySelectorAll(".reel").forEach((col, i) => {
     col.querySelectorAll(".symbol").forEach((cell, r) => {
       cell.textContent = ["🜂","🜁","🜃","🜄","A","K","Q","J","🜸","🔥"][ (stops[i]+r) % 10 ];
@@ -59,16 +64,40 @@ function animateStops(stops){
 
 function flashWin(){
   reelsEl.classList.remove("winflash");
-  void reelsEl.offsetWidth; // reflow
+  void reelsEl.offsetWidth;
   reelsEl.classList.add("winflash");
 }
 
 async function init(){
-  outcomes = await loadCSV("./math/outcomes_base.csv"); // relative to /frontend/
+  outcomes      = await loadCSV("./math/outcomes_base.csv");
+  try { outcomesLight = await loadCSV("./math/outcomes_light.csv"); } catch {}
+  try { outcomesDark  = await loadCSV("./math/outcomes_dark.csv"); } catch {}
 }
 init();
 
-// SPIN logic (demo): pick a random outcome by weight
+function openModal(){ modal.classList.remove("hidden"); }
+function closeModalFn(){ modal.classList.add("hidden"); }
+closeModal.onclick = closeModalFn;
+
+// helper: play outcome from given list
+function playFrom(list){
+  if (!list?.length) return alert("No Free Spins data yet (demo).");
+  const totalW = list.reduce((a,o)=>a+o.weight,0);
+  let pick = Math.random()*totalW, chosen = list[0];
+  for (const o of list){ pick -= o.weight; if (pick <= 0){ chosen = o; break; } }
+  animateStops(chosen.events.stops || [0,0,0,0,0]);
+  const payout = bet * (chosen.final_multiplier || 0);
+  setTimeout(()=> {
+    balance += payout;
+    winEl.textContent = format(payout);
+    balanceEl.textContent = format(balance);
+    if (payout>0) flashWin();
+  }, 450);
+}
+chooseLight.onclick = ()=>{ closeModalFn(); playFrom(outcomesLight); };
+chooseDark.onclick  = ()=>{ closeModalFn(); playFrom(outcomesDark);  };
+
+// SPIN logic
 spinBtn.onclick = () => {
   if (!outcomes.length) return;
   if (balance < bet) return alert("Not enough balance (demo).");
@@ -90,20 +119,19 @@ spinBtn.onclick = () => {
     balanceEl.textContent = format(balance);
     if (payout>0) flashWin();
 
-    // If outcome triggers FS, show a quick toast (demo)
     if ((chosen.events.features||[]).includes("FREESPIN_START")){
-      alert("Bonus triggered: choose Light or Dark (demo stub)");
+      openModal();
     }
   }, 450);
 };
 
-// BONUS BUY (demo): just show message — later we’ll switch to outcomes_light/dark
+// BONUS BUY
 buyBtn.onclick = () => {
   const cost = bet * 100;
   if (balance < cost) return alert("Not enough balance for Bonus Buy (demo).");
   balance -= cost;
   balanceEl.textContent = format(balance);
-  alert("Bonus Buy purchased! Choose Light or Dark (demo stub)");
+  openModal();
 };
 
 betMinus.onclick = ()=> setBet(bet - 0.1);
