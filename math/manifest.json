@@ -1,0 +1,12 @@
+{
+  "game": "PhoenixReborn_LightVsDark",
+  "bet": { "min": 0.10, "max": 100, "currency": "USDC" },
+  "modes": [
+    { "id": "base", "name": "Base Game", "csv": "outcomes_base.csv", "rtp": 0.963 },
+    { "id": "light", "name": "Light Phoenix Free Spins", "csv": "outcomes_light.csv", "rtp": 0.968 },
+    { "id": "dark", "name": "Dark Phoenix Free Spins", "csv": "outcomes_dark.csv", "rtp": 0.968 },
+    { "id": "bonusbuy", "name": "Bonus Buy", "csv": "outcomes_bonusbuy.csv", "rtp": 0.968 }
+  ],
+  "lines": 20,
+  "grid": { "reels": 5, "rows": 3 }
+}
