@@ -33,3 +33,7 @@
 .choice:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .close{margin-top:14px;width:100%;padding:10px;border-radius:10px;border:1px solid #3b2a3e;background:#201320;color:#ddd;cursor:pointer}
 .close:hover{filter:brightness(1.05)}
+.reel.spin { filter: brightness(1.05); }
+.symbol.spinTick { opacity:.65; transform: translateY(8px); transition: transform .08s, opacity .08s; }
+.symbol.stop { outline: 2px solid rgba(255,196,86,.25); }
+.win-cell { box-shadow: 0 0 18px rgba(255,196,86,.7) inset, 0 0 14px rgba(255,196,86,.4); }
