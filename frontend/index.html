@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phoenix Reborn – Demo</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="label">BALANCE</div><div id="balance">1000.00</div>
+    <h1 class="logo">PHOENIX REBORN</h1>
+    <div class="label">WIN</div><div id="win">0.00</div>
+  </header>
+
+  <main class="stage">
+    <div id="reels" class="reels">
+      <div class="reel"></div>
+      <div class="reel"></div>
+      <div class="reel"></div>
+      <div class="reel"></div>
+      <div class="reel"></div>
+    </div>
+
+    <aside class="side">
+      <button id="bonusBuy" class="btn buy">BUY BONUS</button>
+      <div class="hint">Light vs Dark bonus buy (demo)</div>
+    </aside>
+  </main>
+
+  <footer class="controls">
+    <div class="betbox">
+      <button id="betMinus" class="btn small">–</button>
+      <div class="betval"><span class="label">BET</span> <span id="bet">1.00</span></div>
+      <button id="betPlus" class="btn small">+</button>
+    </div>
+    <button id="spin" class="btn spin">SPIN</button>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
