@@ -64,7 +64,7 @@ function flashWin(){
 }
 
 async function init(){
-  outcomes = await loadCSV("../math/outcomes_base.csv"); // relative to /frontend/
+  outcomes = await loadCSV("./math/outcomes_base.csv"); // relative to /frontend/
 }
 init();
 
