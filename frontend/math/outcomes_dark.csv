@@ -1,0 +1,3 @@
+simulation_id,weight,events_json,final_multiplier
+2001,1,"{""stops"":[7,7,7,7,7],""lines"":[{""id"":5,""symbols"":[""WILD"",""WILD"",""WILD""],""win"":150}],""features"":[""FS_DARK"",""MULTIPLIER+5""]}",150.0
+2002,1,"{""stops"":[3,18,24,30,11],""lines"":[], ""features"":[""FS_DARK""]}",0.0
