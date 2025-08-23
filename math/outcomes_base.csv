@@ -1,4 +1,0 @@
-simulation_id,weight,events_json,final_multiplier
-1,1,"{""stops"":[0,1,2,3,4],""lines"":[{""id"":1,""symbols"":[""A"",""A"",""A""],""win"":5}],""features"":[]}",5.0
-2,1,"{""stops"":[5,6,7,8,9],""lines"":[], ""features"":[""FREESPIN_START""]}",0.0
-3,1,"{""stops"":[2,2,2,2,2],""lines"":[{""id"":5,""symbols"":[""WILD"",""WILD"",""WILD""],""win"":50}],""features"":[]}",50.0
