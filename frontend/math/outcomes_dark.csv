@@ -1,4 +1,14 @@
 simulation_id,weight,events_json,final_multiplier
-2001,3,"{""stops"":[7,7,7,7,7],""lines"":[{""id"":5,""symbols"":[""WILD"",""WILD"",""WILD""],""win"":50}],""features"":[""FS_DARK"",""MULTIPLIER+5""]}",50.0
-2002,6,"{""stops"":[3,18,24,30,11],""lines"":[], ""features"":[""FS_DARK""]}",0.0
-2003,1,"{""stops"":[2,9,5,8,1],""lines"":[{""id"":2,""symbols"":[""A"",""A"",""A""],""win"":12}],""features"":[""FS_DARK"",""MULTIPLIER+3""]}",12.0
+2001,10,"{""stops"":[6,7,8,9,0],""lines"":[],""features"":[""FS_DARK""]}",0.0
+2002,8,"{""stops"":[2,2,2,2,2],""lines"":[],""win_positions"":[[0,1],[1,1],[2,1],[3,1],[4,1]],""features"":[""FS_DARK"",""MULTIPLIER+3""]}",25.0
+2003,6,"{""stops"":[9,9,9,1,1],""lines"":[],""win_positions"":[[0,0],[1,0],[2,0]],""features"":[""FS_DARK""]}",15.0
+2004,5,"{""stops"":[7,7,7,7,7],""lines"":[],""win_positions"":[[0,2],[1,2],[2,2],[3,2],[4,2]],""features"":[""FS_DARK"",""MULTIPLIER+5""]}",40.0
+2005,5,"{""stops"":[3,6,9,3,6],""lines"":[],""features"":[""FS_DARK""]}",0.0
+2006,4,"{""stops"":[5,5,5,5,5],""lines"":[],""win_positions"":[[0,0],[1,0],[2,0],[3,0],[4,0]],""features"":[""FS_DARK"",""MULTIPLIER+4""]}",30.0
+2007,4,"{""stops"":[1,4,7,1,4],""lines"":[],""features"":[""FS_DARK""]}",0.0
+2008,3,"{""stops"":[8,1,8,1,8],""lines"":[],""win_positions"":[[0,1],[2,1],[4,1]],""features"":[""FS_DARK""]}",22.0
+2009,3,"{""stops"":[4,4,4,2,2],""lines"":[],""win_positions"":[[0,2],[1,2],[2,2]],""features"":[""FS_DARK""]}",18.0
+2010,2,"{""stops"":[0,3,6,9,0],""lines"":[],""features"":[""FS_DARK""]}",0.0
+2011,2,"{""stops"":[9,9,9,9,9],""lines"":[],""win_positions"":[[0,1],[1,1],[2,1],[3,1],[4,1]],""features"":[""FS_DARK"",""MULTIPLIER+8""]}",75.0
+2012,1,"{""stops"":[7,2,7,2,7],""lines"":[],""features"":[""FS_DARK""]}",0.0
+2013,1,"{""stops"":[6,6,1,1,6],""lines"":[],""win_positions"":[[0,0],[1,0],[4,0]],""features"":[""FS_DARK""]}",28.0
