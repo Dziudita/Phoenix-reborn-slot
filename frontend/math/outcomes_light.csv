@@ -1,5 +1,16 @@
 simulation_id,weight,events_json,final_multiplier
-1001,4,"{""stops"":[4,12,7,19,22],""lines"":[{""id"":3,""symbols"":[""A"",""A"",""A""],""win"":8}],""features"":[""FS_LIGHT"",""MULTIPLIER+1""]}",8.0
-1002,6,"{""stops"":[9,15,2,11,5],""lines"":[], ""features"":[""FS_LIGHT""]}",0.0
-1003,2,"{""stops"":[1,5,9,13,17],""lines"":[{""id"":1,""symbols"":[""Q"",""Q"",""Q""],""win"":5}],""features"":[""FS_LIGHT"",""MULTIPLIER+1""]}",5.0
-1004,1,"{""stops"":[7,7,7,7,7],""lines"":[{""id"":5,""symbols"":[""WILD"",""WILD"",""WILD""],""win"":20}],""features"":[""FS_LIGHT"",""MULTIPLIER+2""]}",20.0
+1001,8,"{""stops"":[1,2,3,4,5],""lines"":[],""win_positions"":[[0,1],[1,1],[2,1]],""features"":[""FS_LIGHT""]}",6.0
+1002,12,"{""stops"":[6,7,8,2,3],""lines"":[],""features"":[""FS_LIGHT""]}",0.0
+1003,10,"{""stops"":[0,0,0,1,1],""lines"":[],""win_positions"":[[0,0],[1,0],[2,0]],""features"":[""FS_LIGHT""]}",4.0
+1004,6,"{""stops"":[2,2,2,3,3],""lines"":[],""win_positions"":[[0,2],[1,2],[2,2]],""features"":[""FS_LIGHT"",""MULTIPLIER+1""]}",8.0
+1005,5,"{""stops"":[4,4,4,5,5],""lines"":[],""win_positions"":[[0,1],[1,1],[2,1]],""features"":[""FS_LIGHT""]}",10.0
+1006,5,"{""stops"":[7,7,1,1,7],""lines"":[],""win_positions"":[[0,2],[1,2],[4,2]],""features"":[""FS_LIGHT""]}",12.0
+1007,4,"{""stops"":[3,6,3,6,3],""lines"":[],""features"":[""FS_LIGHT""]}",0.0
+1008,3,"{""stops"":[8,8,8,2,2],""lines"":[],""win_positions"":[[0,1],[1,1],[2,1]],""features"":[""FS_LIGHT"",""MULTIPLIER+1""]}",15.0
+1009,3,"{""stops"":[5,5,5,6,7],""lines"":[],""win_positions"":[[0,0],[1,0],[2,0]],""features"":[""FS_LIGHT""]}",9.0
+1010,2,"{""stops"":[9,9,2,2,2],""lines"":[],""features"":[""FS_LIGHT""]}",0.0
+1011,2,"{""stops"":[1,4,7,1,4],""lines"":[],""win_positions"":[[0,2],[1,2],[2,2]],""features"":[""FS_LIGHT""]}",5.0
+1012,2,"{""stops"":[6,6,6,6,6],""lines"":[],""win_positions"":[[0,1],[1,1],[2,1],[3,1],[4,1]],""features"":[""FS_LIGHT"",""MULTIPLIER+2""]}",20.0
+1013,1,"{""stops"":[3,3,3,3,3],""lines"":[],""win_positions"":[[0,2],[1,2],[2,2],[3,2],[4,2]],""features"":[""FS_LIGHT""]}",18.0
+1014,1,"{""stops"":[7,1,7,1,7],""lines"":[],""features"":[""FS_LIGHT""]}",0.0
+1015,1,"{""stops"":[4,8,4,8,4],""lines"":[],""win_positions"":[[0,0],[2,0],[4,0]],""features"":[""FS_LIGHT""]}",7.0
