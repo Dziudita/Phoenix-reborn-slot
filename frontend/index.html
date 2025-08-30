@@ -27,6 +27,24 @@
       <div class="hint">Light vs Dark bonus buy (demo)</div>
     </aside>
   </main>
+<!-- Bonus Buy modal (choose mode with prices) -->
+<div id="buyModal" class="modal hidden">
+  <div class="modal-panel">
+    <h2>Buy Free Spins</h2>
+    <p class="sub">Choose a bonus to purchase. Price scales with your bet.</p>
+    <div class="choices">
+      <button id="buyLight" class="choice light">
+        🕊️ Buy Light FS
+        <div class="pricechip"><span id="priceLight">—</span></div>
+      </button>
+      <button id="buyDark" class="choice dark">
+        🦅 Buy Dark FS
+        <div class="pricechip"><span id="priceDark">—</span></div>
+      </button>
+    </div>
+    <button id="closeBuy" class="close">Cancel</button>
+  </div>
+</div>
 
   <!-- Light vs Dark modal -->
   <div id="bonusModal" class="modal hidden">
