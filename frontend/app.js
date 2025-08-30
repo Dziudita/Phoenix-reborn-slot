@@ -1,27 +1,43 @@
-// --- CSV loader: robust 4-column parser (handles commas inside JSON) ---
+// --- CSV loader: fixes outer quotes around JSON field ---
 async function loadCSV(path) {
   const txt = await fetch(path).then(r => {
     if (!r.ok) throw new Error(`Failed to load ${path}`);
     return r.text();
   });
+
   const lines = txt.trim().split(/\r?\n/);
   lines.shift(); // drop header
-  return lines
-    .filter(Boolean)
-    .map(line => {
-      const firstComma = line.indexOf(",");
-      const secondComma = line.indexOf(",", firstComma + 1);
-      const lastComma = line.lastIndexOf(",");
-      const simulation_id = line.slice(0, firstComma).trim();
-      const weight = Number(line.slice(firstComma + 1, secondComma).trim());
-      const events_json_raw = line.slice(secondComma + 1, lastComma).trim();
-      const final_multiplier = Number(line.slice(lastComma + 1).trim());
-      // CSV escapes quotes by doubling them — convert back
-      const jsonFixed = events_json_raw.replaceAll('""', '"');
-      const events_json = JSON.parse(jsonFixed);
-      return { simulation_id, weight, events: events_json, final_multiplier };
-    });
+
+  return lines.filter(Boolean).map(line => {
+    const firstComma  = line.indexOf(",");
+    const secondComma = line.indexOf(",", firstComma + 1);
+    const lastComma   = line.lastIndexOf(",");
+
+    const simulation_id   = line.slice(0, firstComma).trim();
+    const weight          = Number(line.slice(firstComma + 1, secondComma).trim());
+    let   events_json_raw = line.slice(secondComma + 1, lastComma).trim(); // CSV-quoted JSON
+    const final_multiplier= Number(line.slice(lastComma + 1).trim());
+
+    // CSV naudoja dvigubinamas kabutes ("") – paverčiam į "
+    let jsonFixed = events_json_raw.replaceAll('""', '"');
+
+    // Nulupam IŠORINES kabutes, jei jos yra (CSV laukas paprastai būna apsuptas ")
+    if (jsonFixed.startsWith('"') && jsonFixed.endsWith('"')) {
+      jsonFixed = jsonFixed.slice(1, -1);
+    }
+
+    let events_json;
+    try {
+      events_json = JSON.parse(jsonFixed);
+    } catch (e) {
+      console.error("JSON parse failed for:", jsonFixed);
+      throw e;
+    }
+
+    return { simulation_id, weight, events: events_json, final_multiplier };
+  });
 }
+
 
 // ---- DOM refs ----
 const reelsEl   = document.getElementById("reels");
