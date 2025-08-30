@@ -1,25 +1,39 @@
 :root { --bg:#151316; --panel:#1d1a20; --accent:#f28c28; --accent2:#7b2ff7; --text:#efe7ff; }
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(80% 120% at 50% 0%,#2b1a1a 0%,#150d0d 55%,#0b090b 100%);color:var(--text);font-family:Inter,system-ui,Arial}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(80% 120% at 50% 0%,#2b1a1a 0%,#150d0d 55%,#0b090b 100%);color:var(--text);font-family:Inter,system-ui,Arial}
+
 .topbar{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:14px 18px;background:linear-gradient(180deg,#23101a,#1a0f16)}
 .topbar .logo{justify-self:center;margin:0;font-weight:800;letter-spacing:2px;color:#ffb24c;text-shadow:0 2px 10px rgba(242,140,40,.5)}
 .label{opacity:.7;font-size:12px;margin-right:6px}
+
 .stage{display:grid;grid-template-columns:1fr 230px;gap:16px;max-width:1080px;margin:32px auto;padding:0 16px}
 .reels{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px;background:linear-gradient(180deg,#241b24,#141014);border:1px solid #3a2a3d;border-radius:14px;box-shadow:0 8px 40px rgba(242,140,40,.15) inset}
-.reel{height:340px;border-radius:10px;background:repeating-linear-gradient(#2a222d, #2a222d 66px, #352a39 66px, #352a39 132px);border:1px solid #4b3a50;display:grid;grid-template-rows:repeat(3,1fr);overflow:hidden}
+.reel{height:340px;border-radius:10px;background:repeating-linear-gradient(#2a222d, #2a222d 66px, #352a39 66px, #352a39 132px);border:1px solid #4b3a50;display:grid;grid-template-rows:repeat(3,1fr);overflow:hidden;will-change:transform}
 .reel::before,.reel::after{content:"";height:1px;background:rgba(255,255,255,.06);align-self:center}
 .side{display:flex;flex-direction:column;gap:12px;align-items:stretch;justify-content:center;background:linear-gradient(180deg,#1c1420,#120e14);border:1px solid #3a2a3d;border-radius:14px;padding:16px}
 .hint{font-size:12px;opacity:.7;text-align:center}
+
 .controls{display:flex;gap:16px;align-items:center;justify-content:center;padding:20px}
 .btn{border:none;border-radius:999px;padding:14px 22px;font-weight:800;color:#120e0e;cursor:pointer;transition:.15s transform,.15s filter}
 .btn:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .btn.spin{background:radial-gradient(circle at 30% 30%,#ffcf7a,#f28c28);box-shadow:0 8px 30px rgba(242,140,40,.35)}
 .btn.buy{background:radial-gradient(circle at 30% 30%,#b184ff,#7b2ff7);color:white;box-shadow:0 8px 30px rgba(123,47,247,.35)}
 .btn.small{padding:10px 14px;background:#2a202b;color:#ddd}
+.btn:disabled{opacity:.6;cursor:not-allowed;filter:saturate(.7)}
+
 .betbox{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#1c141d,#130f13);border:1px solid #39283c;border-radius:999px;padding:6px 10px}
 .betval{min-width:120px;text-align:center}
-.symbol{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;color:#ffcf7a;text-shadow:0 2px 6px rgba(242,140,40,.5)}
+
+.symbol{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;color:#ffcf7a;text-shadow:0 2px 6px rgba(242,140,40,.5);will-change:transform}
 .winflash{animation:flash .7s ease}
 @keyframes flash{0%{box-shadow:0 0 0 rgba(255,196,86,0)} 40%{box-shadow:0 0 28px rgba(255,196,86,.7)} 100%{box-shadow:0 0 0 rgba(255,196,86,0)}}
+
+/* Spin / win states */
+.reel.spin { filter: brightness(1.05); }
+.symbol.spinTick { opacity:.65; transform: translateY(8px); transition: transform .08s, opacity .08s; }
+.symbol.stop { outline: 2px solid rgba(255,196,86,.25); }
+.win-cell { box-shadow: 0 0 18px rgba(255,196,86,.7) inset, 0 0 14px rgba(255,196,86,.4); }
+
 /* Modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:40}
 .hidden{display:none}
@@ -33,7 +47,3 @@
 .choice:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .close{margin-top:14px;width:100%;padding:10px;border-radius:10px;border:1px solid #3b2a3e;background:#201320;color:#ddd;cursor:pointer}
 .close:hover{filter:brightness(1.05)}
-.reel.spin { filter: brightness(1.05); }
-.symbol.spinTick { opacity:.65; transform: translateY(8px); transition: transform .08s, opacity .08s; }
-.symbol.stop { outline: 2px solid rgba(255,196,86,.25); }
-.win-cell { box-shadow: 0 0 18px rgba(255,196,86,.7) inset, 0 0 14px rgba(255,196,86,.4); }
