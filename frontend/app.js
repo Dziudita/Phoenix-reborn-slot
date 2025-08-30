@@ -39,7 +39,7 @@ const PAY = {
 const IS_WILD    = s => s === SYM.WILD;
 const IS_SCATTER = s => s === SYM.SCATTER;
 
-// 20 paylines (row 0..2)
+// 20 paylines
 const PAYLINES = [
   [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
   [0,0,1,0,0],[2,2,1,2,2],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,0],
@@ -57,13 +57,7 @@ const buyBtn    = document.getElementById("bonusBuy");
 const betMinus  = document.getElementById("betMinus");
 const betPlus   = document.getElementById("betPlus");
 
-// Free Spins choice modal (triggered base)
-const modal       = document.getElementById("bonusModal");
-const chooseLight = document.getElementById("chooseLight");
-const chooseDark  = document.getElementById("chooseDark");
-const closeModal  = document.getElementById("closeModal");
-
-// Bonus Buy modal (new)
+// Bonus Buy modal
 const buyModal    = document.getElementById("buyModal");
 const buyLightBtn = document.getElementById("buyLight");
 const buyDarkBtn  = document.getElementById("buyDark");
@@ -79,10 +73,13 @@ let balance = 1000;
 let bet = 1.0;
 let isSpinning = false;
 
-// BONUS BUY kainos (x bet) — ĮDĖK SAVO SKAIČIUS IŠ SIMULIACIJOS
-// pvz. jei lentelėj gavosi bb_price_light_xbet=85.4 → dėk 85
-const BONUS_PRICE_LIGHT = 85;   // TODO: pakeisk pagal savo sim rezultatus
-const BONUS_PRICE_DARK  = 115;  // TODO: pakeisk pagal savo sim rezultatus
+// BONUS BUY kainos
+const BONUS_PRICE_LIGHT = 85;
+const BONUS_PRICE_DARK  = 115;
+
+// FS trigger behavior
+const FS_TRIGGER_BEHAVIOR = 'alternate'; 
+let lastFsMode = null;
 
 function format(n){ return Number(n).toFixed(2); }
 function setBet(v){
@@ -104,6 +101,7 @@ function drawPlaceholders(){
 }
 drawPlaceholders();
 
+// --- eval helpers ---
 function symbolAt(stops, col, row){
   const startIdx = stops[col] || 0;
   return SYMBOL_POOL[(startIdx + row) % SYMBOL_POOL.length];
@@ -174,13 +172,42 @@ function highlightPositions(positions=[]) {
   positions.forEach(([c,r])=> cols[c]?.querySelectorAll(".symbol")[r]?.classList.add("win-cell"));
 }
 
-// ---- Modals ----
-function openModal(){ modal.classList.remove("hidden"); buyBtn.disabled = true; }
-function closeModalFn(){ modal.classList.add("hidden"); buyBtn.disabled = false; }
-closeModal.onclick = closeModalFn;
+// ---- Toast ----
+function toast(msg){
+  const n = document.createElement('div');
+  n.textContent = msg;
+  n.style.position='fixed'; n.style.left='50%'; n.style.top='16px';
+  n.style.transform='translateX(-50%)';
+  n.style.padding='10px 14px'; n.style.borderRadius='10px';
+  n.style.background='rgba(0,0,0,.7)'; n.style.color='#fff';
+  n.style.zIndex='80'; n.style.fontWeight='800';
+  document.body.appendChild(n);
+  setTimeout(()=> n.remove(), 1200);
+}
 
+// ---- FS mode helpers ----
+function startFS(mode){
+  if (mode === 'light') {
+    playFrom(outcomesLight);
+  } else {
+    playFrom(outcomesDark);
+  }
+}
+function nextFsModeAlternating(){
+  if (lastFsMode === 'light') return 'dark';
+  return 'light';
+}
+function pickFsMode(){
+  if (FS_TRIGGER_BEHAVIOR === 'alternate') {
+    const m = nextFsModeAlternating();
+    lastFsMode = m;
+    return m;
+  }
+  return 'light';
+}
+
+// ---- Modals ----
 function openBuy(){ 
-  // rodom kainas pagal dabartinį BET
   const costLight = bet * BONUS_PRICE_LIGHT;
   const costDark  = bet * BONUS_PRICE_DARK;
   priceLightEl.textContent = `${format(costLight)}`;
@@ -199,12 +226,10 @@ closeBuy.onclick = closeBuyFn;
 // ---- FS paleidimas (Light/Dark) iš CSV
 function playFrom(list){
   if (!list?.length) return alert("No Free Spins data yet (demo).");
-  // weighted pick
   const totalW = list.reduce((a,o)=>a+o.weight,0);
   let pick = Math.random()*totalW, chosen = list[0];
   for (const o of list){ pick -= o.weight; if (pick <= 0){ chosen = o; break; } }
   const stops = chosen.events.stops || [0,0,0,0,0];
-
   spinAnimate(stops, 600, 100).then(()=>{
     const { totalMult, winPositions } = evalSpin(stops);
     const payout = bet * totalMult;
@@ -215,8 +240,6 @@ function playFrom(list){
     highlightPositions(winPositions);
   });
 }
-chooseLight.onclick = ()=>{ closeModalFn(); playFrom(outcomesLight); };
-chooseDark.onclick  = ()=>{ closeModalFn(); playFrom(outcomesDark);  };
 
 // ---- Init ----
 async function init(){
@@ -237,7 +260,6 @@ spinBtn.onclick = async () => {
   balanceEl.textContent = format(balance);
   winEl.textContent = "0.00";
 
-  // pick outcome by weight
   const totalW = outcomes.reduce((a,o)=>a+o.weight,0);
   let pick = Math.random()*totalW, chosen = outcomes[0];
   for (const o of outcomes){ pick -= o.weight; if (pick <= 0){ chosen = o; break; } }
@@ -254,7 +276,9 @@ spinBtn.onclick = async () => {
   highlightPositions(winPositions);
 
   if (features.includes("FREESPIN_START") || (chosen.events.features||[]).includes("FREESPIN_START")){
-    openModal(); // Light/Dark pasirinkimas už base trigger
+    const mode = pickFsMode();
+    toast(mode==='light'?'Light FS! 🕊️':'Dark FS! 🦅');
+    startFS(mode);
   }
 
   isSpinning = false; spinBtn.disabled = false;
@@ -263,17 +287,13 @@ spinBtn.onclick = async () => {
 // ---- Bonus Buy ----
 buyBtn.onclick = () => { openBuy(); };
 
-// Buy Light
 buyLightBtn.onclick = ()=>{
   const cost = bet * BONUS_PRICE_LIGHT;
   if (balance < cost) return alert("Not enough balance for Light FS.");
   balance -= cost; balanceEl.textContent = format(balance);
   closeBuyFn();
-  // perkam Light → tiesiai FS (be pasirinkimo modalo)
   playFrom(outcomesLight);
 };
-
-// Buy Dark
 buyDarkBtn.onclick = ()=>{
   const cost = bet * BONUS_PRICE_DARK;
   if (balance < cost) return alert("Not enough balance for Dark FS.");
