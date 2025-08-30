@@ -1,3 +1,5 @@
 simulation_id,weight,events_json,final_multiplier
-1001,1,"{""stops"":[4,12,7,19,22],""lines"":[{""id"":3,""symbols"":[""A"",""A"",""A""],""win"":12}],""features"":[""FS_LIGHT"",""MULTIPLIER+1""]}",12.0
-1002,1,"{""stops"":[9,15,2,11,5],""lines"":[], ""features"":[""FS_LIGHT""]}",0.0
+1001,4,"{""stops"":[4,12,7,19,22],""lines"":[{""id"":3,""symbols"":[""A"",""A"",""A""],""win"":8}],""features"":[""FS_LIGHT"",""MULTIPLIER+1""]}",8.0
+1002,6,"{""stops"":[9,15,2,11,5],""lines"":[], ""features"":[""FS_LIGHT""]}",0.0
+1003,2,"{""stops"":[1,5,9,13,17],""lines"":[{""id"":1,""symbols"":[""Q"",""Q"",""Q""],""win"":5}],""features"":[""FS_LIGHT"",""MULTIPLIER+1""]}",5.0
+1004,1,"{""stops"":[7,7,7,7,7],""lines"":[{""id"":5,""symbols"":[""WILD"",""WILD"",""WILD""],""win"":20}],""features"":[""FS_LIGHT"",""MULTIPLIER+2""]}",20.0
