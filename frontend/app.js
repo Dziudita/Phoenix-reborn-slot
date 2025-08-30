@@ -89,7 +89,7 @@ function flashWin(){
   reelsEl.classList.add("winflash");
 }
 
-async function spinAnimate(targetStops, baseDuration = 700, stagger = 140){
+async function spinAnimate(targetStops, baseDuration = 720, stagger = 160){
   reelsEl.querySelectorAll(".symbol").forEach(n=>n.classList.remove("win-cell","stop"));
   const durations = Array.from({length:5}, (_,i)=> baseDuration + i*stagger);
   const start = performance.now();
@@ -122,6 +122,16 @@ async function spinAnimate(targetStops, baseDuration = 700, stagger = 140){
   });
 }
 
+// highlight EXACT cells from CSV (col,row) with row 0..2 (0=top)
+function highlightPositions(positions=[]) {
+  const cols = reelsEl.querySelectorAll(".reel");
+  positions.forEach(([c,r])=>{
+    const col = cols[c];
+    const cell = col?.querySelectorAll(".symbol")[r];
+    if (cell) cell.classList.add("win-cell");
+  });
+}
+
 // ---- Modal helpers ----
 function openModal(){ modal.classList.remove("hidden"); buyBtn.disabled = true; }
 function closeModalFn(){ modal.classList.add("hidden"); buyBtn.disabled = false; }
@@ -140,12 +150,7 @@ function playFrom(list){
     winEl.textContent = format(payout);
     balanceEl.textContent = format(balance);
     if (payout>0) flashWin();
-    if (chosen.events.lines && chosen.events.lines.length){
-      const cols = reelsEl.querySelectorAll(".reel");
-      for (let i=0;i<5;i++){
-        cols[i].querySelectorAll(".symbol")[1]?.classList.add("win-cell");
-      }
-    }
+    highlightPositions(chosen.events.win_positions || []);
   });
 }
 chooseLight.onclick = ()=>{ closeModalFn(); playFrom(outcomesLight); };
@@ -183,12 +188,7 @@ spinBtn.onclick = async () => {
   balanceEl.textContent = format(balance);
   if (payout>0) flashWin();
 
-  if (chosen.events.lines && chosen.events.lines.length){
-    const cols = reelsEl.querySelectorAll(".reel");
-    for (let i=0;i<5;i++){
-      cols[i].querySelectorAll(".symbol")[1]?.classList.add("win-cell");
-    }
-  }
+  highlightPositions(chosen.events.win_positions || []);
 
   if ((chosen.events.features||[]).includes("FREESPIN_START")){
     openModal();
