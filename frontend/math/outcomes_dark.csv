@@ -1,3 +1,4 @@
 simulation_id,weight,events_json,final_multiplier
-2001,1,"{""stops"":[7,7,7,7,7],""lines"":[{""id"":5,""symbols"":[""WILD"",""WILD"",""WILD""],""win"":150}],""features"":[""FS_DARK"",""MULTIPLIER+5""]}",150.0
-2002,1,"{""stops"":[3,18,24,30,11],""lines"":[], ""features"":[""FS_DARK""]}",0.0
+2001,3,"{""stops"":[7,7,7,7,7],""lines"":[{""id"":5,""symbols"":[""WILD"",""WILD"",""WILD""],""win"":50}],""features"":[""FS_DARK"",""MULTIPLIER+5""]}",50.0
+2002,6,"{""stops"":[3,18,24,30,11],""lines"":[], ""features"":[""FS_DARK""]}",0.0
+2003,1,"{""stops"":[2,9,5,8,1],""lines"":[{""id"":2,""symbols"":[""A"",""A"",""A""],""win"":12}],""features"":[""FS_DARK"",""MULTIPLIER+3""]}",12.0
