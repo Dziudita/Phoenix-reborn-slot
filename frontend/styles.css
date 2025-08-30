@@ -43,6 +43,8 @@ body{margin:0;background:radial-gradient(80% 120% at 50% 0%,#2b1a1a 0%,#150d0d 5
 .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .choice{padding:16px;border-radius:12px;border:1px solid #3b2a3e;color:#fff;font-weight:800;cursor:pointer}
 .choice.light{background:radial-gradient(130% 120% at 10% 0%,#ffebb1 0%,#ffb24c 60%,#7a3c12 100%);color:#1a0e08}
+.pricechip{margin-top:8px;display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid #3b2a3e;font-weight:700}
+
 .choice.dark{background:radial-gradient(130% 120% at 10% 0%,#b89aff 0%,#7b2ff7 55%,#2a0f48 100%)}
 .choice:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .close{margin-top:14px;width:100%;padding:10px;border-radius:10px;border:1px solid #3b2a3e;background:#201320;color:#ddd;cursor:pointer}
