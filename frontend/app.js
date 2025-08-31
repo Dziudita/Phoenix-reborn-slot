@@ -25,7 +25,7 @@ async function loadCSV(path) {
 const SYM = { FIRE:0, AIR:1, EARTH:2, WATER:3, A:4, K:5, Q:6, J:7, SCATTER:8, WILD:9 };
 const SYMBOL_POOL = [SYM.FIRE,SYM.AIR,SYM.EARTH,SYM.WATER,SYM.A,SYM.K,SYM.Q,SYM.J,SYM.SCATTER,SYM.WILD];
 
-// Paytable (multiplier on bet)
+// Paytable (multiplier on bet) — prireikus RTP korekcijai, mažink šitas reikšmes
 const PAY = {
   [SYM.FIRE]:  {3:10,4:30,5:80},
   [SYM.AIR]:   {3:8, 4:20,5:60},
@@ -39,7 +39,7 @@ const PAY = {
 const IS_WILD    = s => s === SYM.WILD;
 const IS_SCATTER = s => s === SYM.SCATTER;
 
-// 20 paylines
+// 20 paylines (row 0..2)
 const PAYLINES = [
   [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
   [0,0,1,0,0],[2,2,1,2,2],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,0],
@@ -57,14 +57,6 @@ const buyBtn    = document.getElementById("bonusBuy");
 const betMinus  = document.getElementById("betMinus");
 const betPlus   = document.getElementById("betPlus");
 
-// Bonus Buy modal
-const buyModal    = document.getElementById("buyModal");
-const buyLightBtn = document.getElementById("buyLight");
-const buyDarkBtn  = document.getElementById("buyDark");
-const closeBuy    = document.getElementById("closeBuy");
-const priceLightEl= document.getElementById("priceLight");
-const priceDarkEl = document.getElementById("priceDark");
-
 // ---- State ----
 let outcomes = [];
 let outcomesLight = [];
@@ -73,13 +65,9 @@ let balance = 1000;
 let bet = 1.0;
 let isSpinning = false;
 
-// BONUS BUY kainos
+// BONUS BUY kainos (x bet) — įsidėk savo sim reikšmes
 const BONUS_PRICE_LIGHT = 85;
 const BONUS_PRICE_DARK  = 115;
-
-// FS trigger behavior
-const FS_TRIGGER_BEHAVIOR = 'alternate'; 
-let lastFsMode = null;
 
 function format(n){ return Number(n).toFixed(2); }
 function setBet(v){
@@ -112,7 +100,7 @@ function countScatters(stops){
 }
 function evalLine(stops, line){
   const seq = line.map((row,col)=> symbolAt(stops,col,row));
-  if (IS_SCATTER(seq[0])) return {mult:0,positions:[]};
+  if (IS_SCATTER(seq[0])) return {mult:0,positions:[]}; // scatter pirmoj kol. nenuskaito line
   let base = null;
   for (const s of seq){ if (!IS_WILD(s) && !IS_SCATTER(s)){ base = s; break; } }
   if (base===null) return {mult:0,positions:[]};
@@ -125,14 +113,12 @@ function evalLine(stops, line){
 }
 function evalSpin(stops){
   let totalMult=0; let winPositions=[];
-  const scatters = countScatters(stops);
-  const features = [];
-  if (scatters>=3) features.push("FREESPIN_START");
   for (const line of PAYLINES){
     const res = evalLine(stops, line);
     if (res.mult>0){ totalMult+=res.mult; winPositions.push(...res.positions); }
   }
-  return { totalMult, winPositions, features };
+  const scatters = countScatters(stops);
+  return { totalMult, winPositions, scatters };
 }
 
 // --- animacija ---
@@ -172,7 +158,7 @@ function highlightPositions(positions=[]) {
   positions.forEach(([c,r])=> cols[c]?.querySelectorAll(".symbol")[r]?.classList.add("win-cell"));
 }
 
-// ---- Toast ----
+// ---- Toast (trumpas pranešimas viršuje) ----
 function toast(msg){
   const n = document.createElement('div');
   n.textContent = msg;
@@ -185,28 +171,15 @@ function toast(msg){
   setTimeout(()=> n.remove(), 1200);
 }
 
-// ---- FS mode helpers ----
-function startFS(mode){
-  if (mode === 'light') {
-    playFrom(outcomesLight);
-  } else {
-    playFrom(outcomesDark);
-  }
-}
-function nextFsModeAlternating(){
-  if (lastFsMode === 'light') return 'dark';
-  return 'light';
-}
-function pickFsMode(){
-  if (FS_TRIGGER_BEHAVIOR === 'alternate') {
-    const m = nextFsModeAlternating();
-    lastFsMode = m;
-    return m;
-  }
-  return 'light';
-}
+// ---- Bonus Buy modal refs (iš index.html)
+const buyModal    = document.getElementById("buyModal");
+const buyLightBtn = document.getElementById("buyLight");
+const buyDarkBtn  = document.getElementById("buyDark");
+const closeBuy    = document.getElementById("closeBuy");
+const priceLightEl= document.getElementById("priceLight");
+const priceDarkEl = document.getElementById("priceDark");
 
-// ---- Modals ----
+// ---- Bonus Buy modal controls ----
 function openBuy(){ 
   const costLight = bet * BONUS_PRICE_LIGHT;
   const costDark  = bet * BONUS_PRICE_DARK;
@@ -223,12 +196,128 @@ function closeBuyFn(){
 }
 closeBuy.onclick = closeBuyFn;
 
-// ---- FS paleidimas (Light/Dark) iš CSV
-function playFrom(list){
-  if (!list?.length) return alert("No Free Spins data yet (demo).");
+// ---- FS OVERLAY (sukuriam dinamiškai) ----
+let fsOverlay = null, fsTitle = null, fsCounter = null, fsTotal = null;
+function ensureFSOverlay(){
+  if (fsOverlay) return;
+  fsOverlay = document.createElement('div');
+  fsOverlay.style.position='fixed';
+  fsOverlay.style.inset='0';
+  fsOverlay.style.background='rgba(0,0,0,.6)';
+  fsOverlay.style.display='flex';
+  fsOverlay.style.alignItems='center';
+  fsOverlay.style.justifyContent='center';
+  fsOverlay.style.zIndex='70';
+  fsOverlay.style.backdropFilter='blur(2px)';
+
+  const panel = document.createElement('div');
+  panel.style.width='min(520px,92vw)';
+  panel.style.border='1px solid #3a2a3d';
+  panel.style.borderRadius='16px';
+  panel.style.padding='20px';
+  panel.style.background='linear-gradient(180deg,#20161f,#151019)';
+  panel.style.boxShadow='0 12px 60px rgba(0,0,0,.5)';
+  panel.style.textAlign='center';
+
+  fsTitle = document.createElement('h2');
+  fsTitle.style.margin='0 0 10px';
+  fsTitle.style.letterSpacing='1px';
+  fsTitle.textContent = 'FREE SPINS';
+
+  fsCounter = document.createElement('div');
+  fsCounter.style.opacity='.85';
+  fsCounter.style.margin='6px 0 10px';
+
+  fsTotal = document.createElement('div');
+  fsTotal.style.fontWeight='800';
+  fsTotal.style.fontSize='20px';
+
+  panel.appendChild(fsTitle);
+  panel.appendChild(fsCounter);
+  panel.appendChild(fsTotal);
+  fsOverlay.appendChild(panel);
+  document.body.appendChild(fsOverlay);
+}
+function showFSOverlay(mode, spinsLeft, totalWin){
+  ensureFSOverlay();
+  fsTitle.textContent = mode==='light' ? 'Light Free Spins 🕊️' : 'Dark Free Spins 🦅';
+  fsCounter.textContent = `Spins left: ${spinsLeft}`;
+  fsTotal.textContent = `FS total: ${format(totalWin)}`;
+  fsOverlay.style.display='flex';
+}
+function hideFSOverlay(){
+  if (fsOverlay) fsOverlay.style.display='none';
+}
+
+// ---- FS raundas (tikras 10/7 sukimų ciklas) ----
+function weightedPick(list){
   const totalW = list.reduce((a,o)=>a+o.weight,0);
   let pick = Math.random()*totalW, chosen = list[0];
   for (const o of list){ pick -= o.weight; if (pick <= 0){ chosen = o; break; } }
+  return chosen;
+}
+async function runFreeSpins(mode){
+  // lock UI
+  spinBtn.disabled = true; buyBtn.disabled = true;
+
+  const spins = mode==='light' ? 10 : 7;
+  let gmult = (mode==='dark') ? 2 : 1; // dark start x2
+  let fsWin = 0;
+
+  showFSOverlay(mode, spins, fsWin);
+
+  for (let i=0;i<spins;i++){
+    const src = mode==='light' ? outcomesLight : outcomesDark;
+    if (!src?.length) break;
+
+    const chosen = weightedPick(src);
+    const stops = chosen.events.stops || [0,0,0,0,0];
+
+    // FS greitesnė animacija
+    await spinAnimate(stops, 580, 100);
+
+    const { totalMult, winPositions } = evalSpin(stops);
+    const multApplied = totalMult * gmult;
+    const payout = bet * multApplied;
+
+    balance += payout;
+    fsWin += payout;
+
+    winEl.textContent = format(payout);
+    balanceEl.textContent = format(balance);
+    if (payout>0) flashWin();
+    highlightPositions(winPositions);
+
+    // Dark: +1x už bet kokį scatter tų FS metu (kitam spin'ui)
+    if (mode==='dark'){
+      const scat = countScatters(stops);
+      if (scat >= 1) gmult += 1;
+    }
+
+    showFSOverlay(mode, (spins - i - 1), fsWin);
+
+    // nedidelis „kvėpavimas“ tarp FS sukimų
+    await new Promise(r=> setTimeout(r, 350));
+  }
+
+  // trumpas užlaikymas, tada uždarom overlay
+  await new Promise(r=> setTimeout(r, 600));
+  hideFSOverlay();
+
+  // unlock UI
+  spinBtn.disabled = false; buyBtn.disabled = false;
+}
+
+// Sugeneruotas FS startas pagal scat count
+function startFS(mode){
+  toast(mode==='light'?'Light FS! 🕊️':'Dark FS! 🦅');
+  runFreeSpins(mode);
+}
+
+// ---- FS paleidimas (vienas sukimukas – naudojama Bonus Buy demui, jeigu norėtum vietoj pilno ciklo)
+function playFrom(list){
+  if (!list?.length) return alert("No Free Spins data yet (demo).");
+  const chosen = weightedPick(list);
   const stops = chosen.events.stops || [0,0,0,0,0];
   spinAnimate(stops, 600, 100).then(()=>{
     const { totalMult, winPositions } = evalSpin(stops);
@@ -249,7 +338,7 @@ async function init(){
 }
 init();
 
-// ---- Spin ----
+// ---- Spin (BASE GAME) ----
 spinBtn.onclick = async () => {
   if (!outcomes.length) return;
   if (balance < bet) return alert("Not enough balance (demo).");
@@ -260,6 +349,7 @@ spinBtn.onclick = async () => {
   balanceEl.textContent = format(balance);
   winEl.textContent = "0.00";
 
+  // pick outcome by weight
   const totalW = outcomes.reduce((a,o)=>a+o.weight,0);
   let pick = Math.random()*totalW, chosen = outcomes[0];
   for (const o of outcomes){ pick -= o.weight; if (pick <= 0){ chosen = o; break; } }
@@ -267,7 +357,7 @@ spinBtn.onclick = async () => {
 
   await spinAnimate(stops);
 
-  const { totalMult, winPositions, features } = evalSpin(stops);
+  const { totalMult, winPositions, scatters } = evalSpin(stops);
   const payout = bet * totalMult;
   balance += payout;
   winEl.textContent = format(payout);
@@ -275,10 +365,11 @@ spinBtn.onclick = async () => {
   if (payout>0) flashWin();
   highlightPositions(winPositions);
 
-  if (features.includes("FREESPIN_START") || (chosen.events.features||[]).includes("FREESPIN_START")){
-    const mode = pickFsMode();
-    toast(mode==='light'?'Light FS! 🕊️':'Dark FS! 🦅');
-    startFS(mode);
+  // BONUS TRIGGER pagal scat skaičių:
+  // 3 scatters -> LIGHT FS (10), 4+ scatters -> DARK FS (7)
+  if (scatters >= 3) {
+    const mode = (scatters >= 4) ? 'dark' : 'light';
+    await runFreeSpins(mode);
   }
 
   isSpinning = false; spinBtn.disabled = false;
@@ -287,20 +378,21 @@ spinBtn.onclick = async () => {
 // ---- Bonus Buy ----
 buyBtn.onclick = () => { openBuy(); };
 
-buyLightBtn.onclick = ()=>{
+buyLightBtn?.addEventListener('click', async ()=>{
   const cost = bet * BONUS_PRICE_LIGHT;
   if (balance < cost) return alert("Not enough balance for Light FS.");
   balance -= cost; balanceEl.textContent = format(balance);
   closeBuyFn();
-  playFrom(outcomesLight);
-};
-buyDarkBtn.onclick = ()=>{
+  await runFreeSpins('light');
+});
+
+buyDarkBtn?.addEventListener('click', async ()=>{
   const cost = bet * BONUS_PRICE_DARK;
   if (balance < cost) return alert("Not enough balance for Dark FS.");
   balance -= cost; balanceEl.textContent = format(balance);
   closeBuyFn();
-  playFrom(outcomesDark);
-};
+  await runFreeSpins('dark');
+});
 
 // ---- Bet controls ----
 betMinus.onclick = ()=> setBet(bet - 0.1);
