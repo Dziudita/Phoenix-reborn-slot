@@ -1,11 +1,11 @@
-// --- CSV loader
+// --- CSV loader (stops + final_multiplier). Win skaičiuosim patys, o FS prioritetas = final_multiplier
 async function loadCSV(path) {
   const txt = await fetch(path).then(r => {
     if (!r.ok) throw new Error(`Failed to load ${path}`);
     return r.text();
   });
   const lines = txt.trim().split(/\r?\n/);
-  lines.shift(); // header
+  const header = lines.shift(); // simulation_id,weight,events_json,final_multiplier
   return lines.filter(Boolean).map(line => {
     const firstComma  = line.indexOf(",");
     const secondComma = line.indexOf(",", firstComma + 1);
@@ -15,7 +15,8 @@ async function loadCSV(path) {
     let jsonRaw         = line.slice(secondComma + 1, lastComma).trim();
     let jsonFixed = jsonRaw.replaceAll('""','"');
     if (jsonFixed.startsWith('"') && jsonFixed.endsWith('"')) jsonFixed = jsonFixed.slice(1, -1);
-    const events = JSON.parse(jsonFixed);
+    let events = {};
+    try { events = JSON.parse(jsonFixed); } catch(e){ events = {}; }
     const final_mult = Number(line.slice(lastComma + 1).trim() || "0");
     return { simulation_id, weight, events, final_multiplier: final_mult };
   });
@@ -25,6 +26,7 @@ async function loadCSV(path) {
 const SYM = { FIRE:0, AIR:1, EARTH:2, WATER:3, A:4, K:5, Q:6, J:7, SCATTER:8, WILD:9 };
 const SYMBOL_POOL = [SYM.FIRE,SYM.AIR,SYM.EARTH,SYM.WATER,SYM.A,SYM.K,SYM.Q,SYM.J,SYM.SCATTER,SYM.WILD];
 
+// Paytable (multiplier on bet)
 const PAY = {
   [SYM.FIRE]:  {3:10,4:30,5:80},
   [SYM.AIR]:   {3:8, 4:20,5:60},
@@ -38,6 +40,7 @@ const PAY = {
 const IS_WILD    = s => s === SYM.WILD;
 const IS_SCATTER = s => s === SYM.SCATTER;
 
+// 20 paylines (row 0..2)
 const PAYLINES = [
   [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
   [0,0,1,0,0],[2,2,1,2,2],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,0],
@@ -55,6 +58,7 @@ const buyBtn    = document.getElementById("bonusBuy");
 const betMinus  = document.getElementById("betMinus");
 const betPlus   = document.getElementById("betPlus");
 
+// Bonus Buy modal
 const buyModal    = document.getElementById("buyModal");
 const buyLightBtn = document.getElementById("buyLight");
 const buyDarkBtn  = document.getElementById("buyDark");
@@ -73,7 +77,6 @@ let isSpinning = false;
 
 // ---- BET LADDER ----
 const BET_STEPS = [0.10,0.20,0.40,0.60,0.80,1.00,1.20,1.40,1.60,2.00,3.00,5.00];
-
 function setBetByIndex(i){
   betIndex = Math.max(0, Math.min(BET_STEPS.length-1, i));
   bet = BET_STEPS[betIndex];
@@ -83,12 +86,9 @@ betMinus.onclick = ()=> setBetByIndex(betIndex-1);
 betPlus.onclick  = ()=> setBetByIndex(betIndex+1);
 setBetByIndex(0);
 
-// ---- Bonus Buy kainos ----
-function getBonusPrices(bet){
-  return {
-    light: bet * 125,
-    dark: bet * 200
-  };
+// ---- Bonus Buy kainos pagal bet ----
+function getBonusPrices(b){
+  return { light: b*125, dark: b*200 };
 }
 
 // ---- Helpers ----
@@ -119,7 +119,7 @@ function countScatters(stops){
 }
 function evalLine(stops, line){
   const seq = line.map((row,col)=> symbolAt(stops,col,row));
-  if (IS_SCATTER(seq[0])) return {mult:0,positions:[]};
+  if (IS_SCATTER(seq[0])) return {mult:0,positions:[]}; // scatter pirmos kolonos neima
   let base = null;
   for (const s of seq){ if (!IS_WILD(s) && !IS_SCATTER(s)){ base = s; break; } }
   if (base===null) return {mult:0,positions:[]};
@@ -190,36 +190,62 @@ function toast(msg){
   setTimeout(()=> n.remove(), 1200);
 }
 
-// ---- Free Spins ----
+// ---- Weighted pick ----
 function weightedPick(list){
   const totalW = list.reduce((a,o)=>a+o.weight,0);
   let pick = Math.random()*totalW, chosen = list[0];
   for (const o of list){ pick -= o.weight; if (pick <= 0){ chosen = o; break; } }
   return chosen;
 }
+
+// ---- Free Spins (Light/Dark) ----
+// DARK: global multiplier start x2, +1x už bet kokį scatter spin'e (taikomas TIK jei nenaudojam final_multiplier)
 async function runFreeSpins(mode){
   spinBtn.disabled = true; buyBtn.disabled = true;
+
   const spins = mode==='light' ? 10 : 7;
   let gmult = (mode==='dark') ? 2 : 1;
   let fsWin = 0;
+
   toast(mode==='light'?'Light FS! 🕊️':'Dark FS! 🦅');
 
   for (let i=0;i<spins;i++){
     const src = mode==='light' ? outcomesLight : outcomesDark;
     if (!src?.length) break;
+
     const chosen = weightedPick(src);
     const stops = chosen.events.stops || [0,0,0,0,0];
+
+    // animacija
     await spinAnimate(stops, 580, 100);
-    const { totalMult, winPositions } = evalSpin(stops);
-    const payout = bet * totalMult * gmult;
+
+    // 1) bandome naudoti CSV final_multiplier
+    const hasFinal = typeof chosen.final_multiplier === 'number' && chosen.final_multiplier > 0;
+    const evalRes = evalSpin(stops);
+    let multApplied = hasFinal ? chosen.final_multiplier : evalRes.totalMult;
+
+    // 2) DARK global multiplier taikomas tik kai nenaudojam final_multiplier
+    if (!hasFinal && mode==='dark') {
+      multApplied *= gmult;
+    }
+
+    const payout = bet * multApplied;
     balance += payout; fsWin += payout;
+
     winEl.textContent = format(payout);
     balanceEl.textContent = format(balance);
     if (payout>0) flashWin();
-    highlightPositions(winPositions);
-    if (mode==='dark' && countScatters(stops)>0) gmult++;
+    highlightPositions(evalRes.winPositions);
+
+    // DARK: +1x jei tame FS sukimę yra bent vienas scatter (tik kitam sukimui)
+    if (mode==='dark'){
+      const scat = countScatters(stops);
+      if (scat >= 1 && !hasFinal) gmult += 1;
+    }
+
     await new Promise(r=> setTimeout(r, 350));
   }
+
   spinBtn.disabled = false; buyBtn.disabled = false;
 }
 
@@ -239,15 +265,24 @@ spinBtn.onclick = async () => {
   isSpinning = true; spinBtn.disabled = true;
 
   balance -= bet; balanceEl.textContent = format(balance); winEl.textContent = "0.00";
+
   const chosen = weightedPick(outcomes);
   const stops = chosen.events.stops || [0,0,0,0,0];
+
   await spinAnimate(stops);
+
   const { totalMult, winPositions, scatters } = evalSpin(stops);
-  const payout = bet * totalMult; balance += payout;
-  winEl.textContent = format(payout); balanceEl.textContent = format(balance);
+  const payout = bet * totalMult;
+  balance += payout;
+  winEl.textContent = format(payout);
+  balanceEl.textContent = format(balance);
   if (payout>0) flashWin(); highlightPositions(winPositions);
 
-  if (scatters >= 3){ await runFreeSpins(scatters>=4?'dark':'light'); }
+  // 3 scatters -> Light FS; 4+ scatters -> Dark FS
+  if (scatters >= 3){
+    await runFreeSpins(scatters>=4 ? 'dark' : 'light');
+  }
+
   isSpinning = false; spinBtn.disabled = false;
 };
 
